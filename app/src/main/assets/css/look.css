@@ -75,3 +75,20 @@ body.rcv #player video.pvid{border:0;border-radius:12px;box-shadow:none}
 #qp{border-top-left-radius:var(--w-rl);border-top-right-radius:var(--w-rl)}
 #st .snv button{border-radius:var(--w-rm)}
 #st .snv button.on{border-color:var(--w-focus)}
+
+/* ---- التعذّر: حلقة عدّ تنازلي هادئة بدل الأيقونة الميتة، وأيقونة «لا إشارة» ---- */
+#ldg.bad .lgr{animation:none;opacity:1}
+#ldg.bad .lgr circle.lgt{stroke:rgba(245,176,76,.2)}
+#ldg.bad .lgr circle.lgc{stroke:#f5b04c;stroke-dasharray:591 591;stroke-dashoffset:591;transform:rotate(-90deg);transform-box:fill-box;transform-origin:center;animation:none}
+#ldg.bad.cd .lgr circle.lgc{animation:lgcd var(--cd,5s) linear forwards}
+#ldg.bad.sleep .lgr circle.lgc{animation:none;stroke-dashoffset:591}
+#ldg.bad .lgm{animation:none;opacity:.4}
+#ldg.bad .lgw .lgx{display:grid;background:#f5b04c;color:#04201b;border-color:#030d0b}
+#ldg.bad .lgw .lgx svg{width:62%;height:62%}
+#ldg.bad .lds{border-color:rgba(245,176,76,.32);background:rgba(60,40,6,.28);color:#ffe2b0}
+@keyframes lgcd{from{stroke-dashoffset:591}to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){#ldg.bad.cd .lgr circle.lgc{animation:none;stroke-dashoffset:0}}
+
+/* ---- شارة عودة البث صامتاً ---- */
+#sndbadge{display:none;position:fixed;z-index:400;inset-inline:0;bottom:calc(var(--w-safe,28px) + 8px);margin:0 auto;width:max-content;max-width:86vw;padding:12px 26px;border-radius:999px;background:rgba(4,32,27,.92);border:1px solid #3dc9ae;color:#fff;font-size:clamp(16px,1.9vw,22px);font-weight:700;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+#sndbadge.on{display:block}

@@ -116,7 +116,7 @@
   function commit(){
     clearTimeout(bufT);const n=parseInt(buf,10);buf='';rn.style.display='none';if(!n)return;
     const hit=shown.find((x,i)=>numOf(x,i)===n);
-    if(!hit){toast('القناة '+n+' غير موجودة');return}commitBrowse();play(hit);
+    if(!hit){toast('القناة '+n+' غير موجودة');return}play(hit);
   }
   np.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{if(npv.textContent.length<4)npv.textContent+=b.dataset.d});
   $('npdel').onclick=()=>{npv.textContent=npv.textContent.slice(0,-1)};
@@ -141,7 +141,7 @@
     }
     const name=document.createElement('span');name.textContent=it.name;name.className='chname';t.appendChild(name);
     r.children[2].textContent=favs.has(it.url)?'★':'';
-    r.onclick=e=>{e.stopPropagation();commitBrowse();closeL();play(it)};
+    r.onclick=e=>{e.stopPropagation();closeL(true);play(it)};
     return r;
   }
   function build(){
@@ -184,30 +184,10 @@
   }
   document.addEventListener('caps',renderHint);
   function setZone(z){const was=zone;zone=z;if(z==='head'&&was!=='head'){const k=[...headEl.children].findIndex(c=>c.classList.contains('cur'));hIdx=Math.max(0,k)}rm.classList.toggle('z-rows',z==='rows');rm.classList.toggle('z-head',z==='head');renderHead();mark();renderHint();updateHeaderMeta();}
-  /* التجوّل بين المجموعات معاينة فقط: المجموعة المعتمدة هي مجموعة القناة العاملة، ولا تتغير إلا بـ OK على قناة.
-     عند الإغلاق بلا OK أو عند عودة التطبيق نرجع إليها، وكل فتح للقائمة يبدأ منها. */
-  let playGrp='';
-  const grpOk=g=>g===''||(g==='__fav'?favs.size>0:[...$('grp').options].some(o=>o.value===g));
-  function commitBrowse(){playGrp=$('grp').value}
-  function restoreBrowse(){
-    const g=grpOk(playGrp)?playGrp:'';
-    if($('grp').value!==g){$('grp').value=g;render();lastG=null}
-  }
-  function openL(){open=true;
-    if(!/^__/.test($('grp').value)){
-      restoreBrowse();
-      /* القناة العاملة ليست في المجموعة المحفوظة (تغيّر المصدر مثلاً): نبدأ من مجموعتها الفعلية */
-      if(curUrl&&!shown.some(i=>i.url===curUrl)){
-        const it=items.find(i=>i.url===curUrl);
-        if(it){const g=it.group||'بدون مجموعة';playGrp=grpOk(g)?g:'';restoreBrowse()}
-      }
-    }
-    level='rows';nav=[];hIdx=0;lastG=null;rm.dataset.rs=LS.get('m3u_rowstyle','both');build();sel=Math.max(0,shown.findIndex(i=>i.url===curUrl));document.body.classList.add('menu');rm.classList.add('on');v.classList.add('pvid');rb.classList.remove('on');clock();place();setZone('rows');updateHeaderMeta();}
-  function closeL(){const was=open;open=false;rm.classList.remove('on');document.body.classList.remove('menu');v.classList.remove('pvid');v.style.cssText='';if(was)restoreBrowse()}
-  /* عودة التطبيق أو خروجه: لا تبقى القائمة مفتوحة على موضع تجوّل لم يُعتمد */
-  document.addEventListener('visibilitychange',()=>{if(open)closeL()});
+  function openL(){open=true;level='rows';nav=[];hIdx=0;lastG=null;rm.dataset.rs=LS.get('m3u_rowstyle','both');build();sel=Math.max(0,shown.findIndex(i=>i.url===curUrl));document.body.classList.add('menu');rm.classList.add('on');v.classList.add('pvid');rb.classList.remove('on');clock();place();setZone('rows');updateHeaderMeta();}
+  function closeL(keep){const was=open;open=false;rm.classList.remove('on');document.body.classList.remove('menu');v.classList.remove('pvid');v.style.cssText='';zone='rows';if(was&&!keep&&window.__restoreCtx)window.__restoreCtx()}
   function favSel(){const it=shown[sel];if(!it)return;const s=sel;toggleFav(it.url);toast(favs.has(it.url)?'★ أُضيفت إلى المفضلة':'☆ أُزيلت من المفضلة');build();sel=Math.min(s,Math.max(0,rows.children.length-1));mark()}
-  function editSel(){const it=shown[sel];if(!it)return;closeL();if(!(window.__editChannel&&window.__editChannel(it)))toast('تعذّر فتح التعديل')}
+  function editSel(){const it=shown[sel];if(!it)return;closeL(true);if(!(window.__editChannel&&window.__editChannel(it)))toast('تعذّر فتح التعديل')}
   function cycleGroup(d){
     const vals=catData().map(x=>x.v);if(vals.length<2)return;
     let i=vals.indexOf($('grp').value);if(i<0)i=0;
@@ -225,7 +205,7 @@
         e.animate([{opacity:.3,transform:'translateY(-4px) scale(.96)'},{opacity:1,transform:'none'}],{duration:220,easing:'ease-out'})});
     }catch(e){}
   }
-  function openSettings(section){closeL();if(window.__openSettings)window.__openSettings(section)}
+  function openSettings(section){closeL(true);if(window.__openSettings)window.__openSettings(section)}
   function seekBy(sec){const sk=v.seekable;if(!sk||!sk.length){if(noSeekUrl!==curUrl){noSeekUrl=curUrl;toast('هذه القناة لا تدعم التقديم والتأخير')}return}const a=sk.start(0),b=sk.end(sk.length-1),t=Math.min(b,Math.max(a,v.currentTime+sec)),behind=Math.round(b-t);v.currentTime=t;toast(behind>3?'⏪ متأخر '+behind+' ث عن المباشر':'● مباشر')}
 
   /* OK: ضغطة قصيرة تشغّل القناة (عند رفع الإصبع)، والمطوّلة تضيفها للمفضلة أو تزيلها */
@@ -239,7 +219,7 @@
     clearTimeout(lpT);lpArmed=false;
     if(lpFired){lpFired=false;return}
     if(!open||level!=='rows')return;
-    const it=shown[sel];if(it){commitBrowse();closeL();play(it)}
+    const it=shown[sel];if(it){closeL(true);play(it)}
   }
   document.addEventListener('keyup',e=>{
     if(!lpArmed)return;
@@ -281,7 +261,7 @@
     const t=dir>0?(up[0]||c.slice().sort((a,b)=>a.n-b.n)[0]):(down[0]||c.slice().sort((a,b)=>b.n-a.n)[0]);
     if(t)play(t.it);
   }
-  function setMode(m,silent){on=m;document.body.classList.toggle('rcv',m);LS.set('m3u_rcv',m);v.controls=!m;closeL();rb.classList.remove('on');if(m){$('q').value='';$('grp').value='';playGrp='';render();if(!silent&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{})}else if(document.fullscreenElement===document.documentElement)document.exitFullscreen().catch(()=>{})}
+  function setMode(m,silent){on=m;document.body.classList.toggle('rcv',m);LS.set('m3u_rcv',m);v.controls=!m;closeL(true);rb.classList.remove('on');if(m){$('q').value='';$('grp').value='';render();if(!silent&&document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{})}else if(document.fullscreenElement===document.documentElement)document.exitFullscreen().catch(()=>{})}
   rx.onclick=e=>{e.stopPropagation();if(window.WasslaHome)WasslaHome.open()};
   $('player').addEventListener('click',()=>{if(on)open?closeL():openL()});
   document.addEventListener('mousemove',()=>{if(!on)return;rx.classList.add('on');clearTimeout(xT);xT=setTimeout(()=>rx.classList.remove('on'),3000)});
@@ -298,8 +278,8 @@
     else if(k==='ArrowUp'||k==='ArrowDown'){stop();zapByNumber(k==='ArrowUp'?1:-1)}
     else if(e.code==='KeyI'){stop();const it=shown.find(i=>i.url===curUrl);if(it)banner(it)}
   },true);
-  const _play=play;play=function(it){_play(it);if(on&&!window.__autoRestart)banner(it)};
-  window.__rcv={set:setMode};window.__rcvState=()=>({on,open,zone});window.__rcvOpen=function(){if($('grp').value==='__fav'||playGrp==='__fav'){playGrp='';$('grp').value='';render()}openL()};window.__rcvOpenFav=function(){if(!favs.size){toast('لا توجد قنوات مفضلة');return}$('grp').value='__fav';render();lastG=null;openL();toast('وضع المفضلة — رجوع للخروج منه')};window.__rcvOpenCats=function(){openL();setZone('head')};window.__rcvOpenSources=window.__rcvOpenCats;window.__rcvNumpad=function(){closeL();openNumpad()};window.__rcvClose=closeL;window.__rcvToast=toast;window.__zapNum=zapByNumber;
+  const _play=play;play=function(it){_play(it);if(on)banner(it)};
+  window.__rcv={set:setMode};window.__rcvState=()=>({on,open,zone});window.__rcvOpen=function(){if($('grp').value==='__fav'){$('grp').value='';render()}openL()};window.__rcvOpenFav=function(){if(!favs.size){toast('لا توجد قنوات مفضلة');return}$('grp').value='__fav';render();lastG=null;openL();toast('وضع المفضلة — رجوع للخروج منه')};window.__rcvOpenCats=function(){openL();setZone('head')};window.__rcvOpenSources=window.__rcvOpenCats;window.__rcvNumpad=function(){closeL();openNumpad()};window.__rcvClose=closeL;window.__rcvToast=toast;window.__zapNum=zapByNumber;
   window.__rcvRefresh=()=>{if(open){build();sel=Math.min(sel,Math.max(0,rows.children.length-1));mark()}};
 
   const syncFav=()=>document.body.classList.toggle('favmode',$('grp').value==='__fav');
